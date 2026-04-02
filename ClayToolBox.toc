@@ -1,0 +1,8 @@
+## Interface: 120000, 120001, 120005
+## Title: ClayToolBox
+## Notes: Custom macro management tool
+## Author: Clay
+## Version: 1.0.0
+## SavedVariables: ClayToolBoxDB
+
+Core.lua
