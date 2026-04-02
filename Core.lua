@@ -434,8 +434,11 @@ local function ShowDropdown()
         if macroIndex then
             UpdateGameMacro(i)
             mBtn:SetAttribute("macro1", macroIndex)
+            mBtn:SetAttribute("macrotext1", macro.body or "")
         else
             mBtn:SetAttribute("type1", nil)
+            mBtn:SetAttribute("macro1", nil)
+            mBtn:SetAttribute("macrotext1", nil)
         end
 
         local icon = mBtn:CreateTexture(nil, "ARTWORK")
@@ -457,7 +460,7 @@ local function ShowDropdown()
                 ShowEditor(i)
             end
         end)
-        mBtn:RegisterForClicks("LeftButtonUp", "RightButtonUp")
+        mBtn:RegisterForClicks("LeftButtonDown", "LeftButtonUp", "RightButtonDown", "RightButtonUp")
 
         mBtn:SetScript("OnEnter", function(self)
             self.label:SetTextColor(1, 0.82, 0)
