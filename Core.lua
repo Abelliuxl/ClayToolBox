@@ -360,6 +360,14 @@ local function CreateMainButton()
 
     local classTag = select(2, UnitClass("player"))
     local classColor = (C_ClassColor and C_ClassColor.GetClassColor and classTag and C_ClassColor.GetClassColor(classTag)) or (RAID_CLASS_COLORS and classTag and RAID_CLASS_COLORS[classTag]) or { r = 1, g = 1, b = 1 }
+    local numR, numG, numB = 1, 1, 1
+    if classColor then
+        if classColor.GetRGB then
+            numR, numG, numB = classColor:GetRGB()
+        elseif classColor.r and classColor.g and classColor.b then
+            numR, numG, numB = classColor.r, classColor.g, classColor.b
+        end
+    end
 
     local fsLabelFPS = btn:CreateFontString(nil, "OVERLAY")
     fsLabelFPS:SetFont(FONT_PATH, FONT_SIZE, FONT_FLAG)
@@ -370,7 +378,7 @@ local function CreateMainButton()
     local fsNumFPS = btn:CreateFontString(nil, "OVERLAY")
     fsNumFPS:SetFont(FONT_PATH, FONT_SIZE, FONT_FLAG)
     fsNumFPS:SetPoint("LEFT", fsLabelFPS, "RIGHT", 1, 0)
-    fsNumFPS:SetTextColor(classColor.r, classColor.g, classColor.b, 1)
+    fsNumFPS:SetTextColor(numR, numG, numB, 1)
     fsNumFPS:SetText("0")
 
     local fsLabelMS = btn:CreateFontString(nil, "OVERLAY")
@@ -382,13 +390,15 @@ local function CreateMainButton()
     local fsNumMS = btn:CreateFontString(nil, "OVERLAY")
     fsNumMS:SetFont(FONT_PATH, FONT_SIZE, FONT_FLAG)
     fsNumMS:SetPoint("LEFT", fsLabelMS, "RIGHT", 1, 0)
-    fsNumMS:SetTextColor(classColor.r, classColor.g, classColor.b, 1)
+    fsNumMS:SetTextColor(numR, numG, numB, 1)
     fsNumMS:SetText("0")
 
     local function RefreshStatsText()
         local fps = math.floor(GetFramerate() + 0.5)
         local _, _, home, world = GetNetStats()
         local ms = world or home or 0
+        fsNumFPS:SetTextColor(numR, numG, numB, 1)
+        fsNumMS:SetTextColor(numR, numG, numB, 1)
         fsNumFPS:SetText(tostring(fps))
         fsNumMS:SetText(tostring(ms))
         local width = fsLabelFPS:GetStringWidth() + fsNumFPS:GetStringWidth() + fsLabelMS:GetStringWidth() + fsNumMS:GetStringWidth() + 24
