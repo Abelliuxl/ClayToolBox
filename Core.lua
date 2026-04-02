@@ -365,8 +365,6 @@ local menuButtons = {}
 local hideTimer = nil
 local dropdownAlive = false
 local ShowEditor
-local FindOrCreateGameMacro
-local UpdateGameMacro
 
 local function HideDropdown()
     if hideTimer then
@@ -488,17 +486,7 @@ local function ShowDropdown()
         mBtn:SetPoint("TOPLEFT", 2, yOffset)
         mBtn:SetAttribute("type1", "macro")
         mBtn:SetAttribute("type2", nil)
-
-        local macroIndex = FindOrCreateGameMacro(i)
-        if macroIndex then
-            UpdateGameMacro(i)
-            mBtn:SetAttribute("macro1", macroIndex)
-            mBtn:SetAttribute("macrotext1", macro.body or "")
-        else
-            mBtn:SetAttribute("type1", nil)
-            mBtn:SetAttribute("macro1", nil)
-            mBtn:SetAttribute("macrotext1", nil)
-        end
+        mBtn:SetAttribute("macrotext1", macro.body or "")
 
         local rowBg = mBtn:CreateTexture(nil, "BACKGROUND")
         rowBg:SetAllPoints()
@@ -570,57 +558,31 @@ local function ShowDropdown()
 end
 
 -- ============================================================
--- Game Macro Management
+-- Legacy Macro Cleanup
 -- ============================================================
 
-FindOrCreateGameMacro = function(dbIndex)
-    local macro = DB.macros[dbIndex]
-    if not macro then return nil end
+local function CleanupLegacyCTBMacros()
+    if InCombatLockdown() then return end
+    if DB and DB.legacyMacrosCleaned then return end
 
     local numAccount, numChar = GetNumMacros()
     local totalMacros = numAccount + numChar
+    local deleted = 0
 
-    -- Search for our macro by name
-    for i = 1, totalMacros do
-        local name = GetMacroInfo(i)
-        if name and name == "CTB_" .. dbIndex then
-            return i
-        end
-    end
-
-    -- Create new game macro
-    local icon = GetMacroTexture(macro.icon)
-    local macroId = CreateMacro("CTB_" .. dbIndex, icon, macro.body, nil)
-    return macroId
-end
-
-UpdateGameMacro = function(dbIndex)
-    local macro = DB.macros[dbIndex]
-    if not macro then return end
-
-    local numAccount, numChar = GetNumMacros()
-    local totalMacros = numAccount + numChar
-
-    for i = 1, totalMacros do
-        local name = GetMacroInfo(i)
-        if name and name == "CTB_" .. dbIndex then
-            local icon = GetMacroTexture(macro.icon)
-            EditMacro(i, nil, icon, macro.body)
-            return
-        end
-    end
-end
-
-local function DeleteGameMacroByName(targetName)
-    if not targetName or targetName == "" then return end
-
-    local numAccount, numChar = GetNumMacros()
-    local totalMacros = numAccount + numChar
     for i = totalMacros, 1, -1 do
         local name = GetMacroInfo(i)
-        if name and name == targetName then
+        if name and name:match("^CTB_%d+$") then
             DeleteMacro(i)
+            deleted = deleted + 1
         end
+    end
+
+    if DB then
+        DB.legacyMacrosCleaned = true
+    end
+
+    if deleted > 0 then
+        print(string.format("|cff00ff00ClayToolBox:|r Cleaned %d legacy system macro(s).", deleted))
     end
 end
 
@@ -865,17 +827,8 @@ ShowEditor = function(editIndex)
 
             if editorFrame.editIndex then
                 DB.macros[editorFrame.editIndex] = macroData
-                local macroId = FindOrCreateGameMacro(editorFrame.editIndex)
-                if macroId then
-                    UpdateGameMacro(editorFrame.editIndex)
-                end
             else
                 table.insert(DB.macros, macroData)
-                local newIndex = #DB.macros
-                local macroId = FindOrCreateGameMacro(newIndex)
-                if macroId then
-                    UpdateGameMacro(newIndex)
-                end
             end
 
             HideEditor()
@@ -891,19 +844,7 @@ ShowEditor = function(editIndex)
         deleteBtn:SetText("Delete")
         deleteBtn:SetScript("OnClick", function()
             if editorFrame.editIndex then
-                local oldCount = #DB.macros
                 table.remove(DB.macros, editorFrame.editIndex)
-
-                for i = editorFrame.editIndex, #DB.macros do
-                    local macroId = FindOrCreateGameMacro(i)
-                    if macroId then
-                        UpdateGameMacro(i)
-                    end
-                end
-
-                if oldCount > #DB.macros then
-                    DeleteGameMacroByName("CTB_" .. oldCount)
-                end
 
                 HideEditor()
                 print("|cff00ff00ClayToolBox:|r Macro deleted!")
@@ -961,6 +902,7 @@ end
 
 local function OnLoad()
     EnsureDB()
+    CleanupLegacyCTBMacros()
     local btn = CreateMainButton()
 
     btn:SetScript("OnEnter", function(self)
