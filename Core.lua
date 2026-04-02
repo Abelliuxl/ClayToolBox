@@ -327,16 +327,12 @@ end
 -- ============================================================
 
 local function CreateMainButton()
-    local btn = CreateFrame("Button", "ClayToolBoxButton", UIParent, "BackdropTemplate")
-    btn:SetSize(96, 24)
+    local btn = CreateFrame("Button", "ClayToolBoxButton", UIParent)
+    btn:SetSize(128, 22)
     btn:SetMovable(true)
     btn:EnableMouse(true)
     btn:RegisterForDrag("LeftButton")
     btn:SetClampedToScreen(true)
-    btn:SetBackdrop({
-        bgFile = "Interface\\Buttons\\WHITE8x8",
-    })
-    btn:SetBackdropColor(0, 0, 0, 0.95)
 
     btn:SetScript("OnDragStart", function(self)
         self:StartMoving()
@@ -352,12 +348,62 @@ local function CreateMainButton()
         }
     end)
 
-    local text = btn:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
-    text:SetText("正大光明")
-    text:SetTextColor(1, 1, 1)
-    text:SetPoint("CENTER")
-    btn.text = text
-    btn:SetWidth(math.max(78, math.floor(text:GetStringWidth() + 20)))
+    local bg = btn:CreateTexture(nil, "BACKGROUND")
+    bg:SetAllPoints()
+    bg:SetColorTexture(0, 0, 0, 0.82)
+    bg:Hide()
+    btn.bg = bg
+
+    local FONT_PATH = STANDARD_TEXT_FONT
+    local FONT_SIZE = 14
+    local FONT_FLAG = "OUTLINE"
+
+    local _, class = UnitClass("player")
+    local cc = (RAID_CLASS_COLORS and RAID_CLASS_COLORS[class]) or { r = 1, g = 1, b = 1 }
+
+    local fsLabelFPS = btn:CreateFontString(nil, "OVERLAY")
+    fsLabelFPS:SetFont(FONT_PATH, FONT_SIZE, FONT_FLAG)
+    fsLabelFPS:SetPoint("LEFT", btn, "LEFT", 8, 0)
+    fsLabelFPS:SetTextColor(1, 1, 1, 1)
+    fsLabelFPS:SetText("FPS:")
+
+    local fsNumFPS = btn:CreateFontString(nil, "OVERLAY")
+    fsNumFPS:SetFont(FONT_PATH, FONT_SIZE, FONT_FLAG)
+    fsNumFPS:SetPoint("LEFT", fsLabelFPS, "RIGHT", 1, 0)
+    fsNumFPS:SetTextColor(cc.r, cc.g, cc.b, 1)
+    fsNumFPS:SetText("0")
+
+    local fsLabelMS = btn:CreateFontString(nil, "OVERLAY")
+    fsLabelMS:SetFont(FONT_PATH, FONT_SIZE, FONT_FLAG)
+    fsLabelMS:SetPoint("LEFT", fsNumFPS, "RIGHT", 8, 0)
+    fsLabelMS:SetTextColor(1, 1, 1, 1)
+    fsLabelMS:SetText("MS:")
+
+    local fsNumMS = btn:CreateFontString(nil, "OVERLAY")
+    fsNumMS:SetFont(FONT_PATH, FONT_SIZE, FONT_FLAG)
+    fsNumMS:SetPoint("LEFT", fsLabelMS, "RIGHT", 1, 0)
+    fsNumMS:SetTextColor(cc.r, cc.g, cc.b, 1)
+    fsNumMS:SetText("0")
+
+    local function RefreshStatsText()
+        local fps = math.floor(GetFramerate() + 0.5)
+        local _, _, home, world = GetNetStats()
+        local ms = world or home or 0
+        fsNumFPS:SetText(tostring(fps))
+        fsNumMS:SetText(tostring(ms))
+        local width = fsLabelFPS:GetStringWidth() + fsNumFPS:GetStringWidth() + fsLabelMS:GetStringWidth() + fsNumMS:GetStringWidth() + 24
+        btn:SetWidth(math.max(96, math.floor(width)))
+    end
+
+    local acc = 0
+    btn:SetScript("OnUpdate", function(_, elapsed)
+        acc = acc + elapsed
+        if acc >= 0.5 then
+            acc = 0
+            RefreshStatsText()
+        end
+    end)
+    RefreshStatsText()
 
     btn:SetPoint(DB.buttonPos.point or "CENTER", UIParent, DB.buttonPos.relativePoint or "CENTER", DB.buttonPos.x or -200, DB.buttonPos.y or 0)
 
@@ -382,6 +428,9 @@ local function HideDropdown()
     dropdownAlive = false
     if dropdownFrame then
         dropdownFrame:Hide()
+    end
+    if ClayToolBoxButton and ClayToolBoxButton.bg then
+        ClayToolBoxButton.bg:Hide()
     end
 end
 
@@ -911,17 +960,21 @@ local function OnLoad()
     local btn = CreateMainButton()
 
     btn:SetScript("OnEnter", function(self)
-        self:SetBackdropColor(0.08, 0.08, 0.08, 0.98)
+        if self.bg then
+            self.bg:Show()
+        end
         ShowDropdown()
         GameTooltip:SetOwner(self, "ANCHOR_TOP")
-        GameTooltip:SetText("正大光明", 1, 1, 1)
+        GameTooltip:SetText("FPS / MS", 1, 1, 1)
         GameTooltip:AddLine("Hover: Open menu", 0.8, 0.8, 0.8)
         GameTooltip:AddLine("Right-click: New macro", 0.8, 0.8, 0.8)
         GameTooltip:AddLine("Drag: Move button", 0.8, 0.8, 0.8)
         GameTooltip:Show()
     end)
     btn:SetScript("OnLeave", function(self)
-        self:SetBackdropColor(0, 0, 0, 0.95)
+        if self.bg and not (dropdownFrame and dropdownFrame:IsShown()) then
+            self.bg:Hide()
+        end
         GameTooltip:Hide()
     end)
 
