@@ -314,7 +314,7 @@ end
 
 local function CreateMainButton()
     local btn = CreateFrame("Button", "ClayToolBoxButton", UIParent)
-    btn:SetSize(62, 62)
+    btn:SetSize(128, 34)
     btn:SetMovable(true)
     btn:EnableMouse(true)
     btn:RegisterForDrag("LeftButton")
@@ -330,25 +330,19 @@ local function CreateMainButton()
     end)
 
     local bg = btn:CreateTexture(nil, "BACKGROUND")
-    bg:SetPoint("TOPLEFT", 2, -2)
-    bg:SetPoint("BOTTOMRIGHT", -2, 2)
-    bg:SetColorTexture(0.08, 0.08, 0.09, 0.95)
+    bg:SetAllPoints()
+    bg:SetColorTexture(0, 0, 0, 0.95)
     btn.bg = bg
 
     local border = btn:CreateTexture(nil, "BORDER")
     border:SetAllPoints()
-    border:SetColorTexture(THEME.panelEdge[1], THEME.panelEdge[2], THEME.panelEdge[3], 1)
+    border:SetColorTexture(1, 1, 1, 0.85)
     btn.border = border
 
-    local icon = btn:CreateTexture(nil, "ARTWORK")
-    icon:SetSize(28, 28)
-    icon:SetPoint("CENTER", 0, 8)
-    icon:SetTexture("Interface\\Icons\\INV_Misc_Gear_01")
-    btn.icon = icon
-
-    local text = btn:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
-    text:SetText("Clay")
-    text:SetPoint("BOTTOM", 0, 7)
+    local text = btn:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+    text:SetText("正大光明")
+    text:SetTextColor(1, 1, 1)
+    text:SetPoint("CENTER")
     btn.text = text
 
     btn:SetPoint("CENTER", DB.buttonPos.x, DB.buttonPos.y)
@@ -440,11 +434,7 @@ local function ShowDropdown()
 
     local btn = ClayToolBoxButton
     dropdownFrame:ClearAllPoints()
-    dropdownFrame:SetPoint("LEFT", btn, "RIGHT", 8, 0)
-    if dropdownFrame:GetRight() and dropdownFrame:GetRight() > UIParent:GetRight() then
-        dropdownFrame:ClearAllPoints()
-        dropdownFrame:SetPoint("RIGHT", btn, "LEFT", -8, 0)
-    end
+    dropdownFrame:SetPoint("TOP", btn, "BOTTOM", 0, 0)
 
     local child = dropdownFrame.scrollChild
     for _, b in ipairs(child.buttons or {}) do
@@ -907,19 +897,19 @@ local function OnLoad()
     local btn = CreateMainButton()
 
     btn:SetScript("OnEnter", function(self)
-        self.bg:SetColorTexture(0.14, 0.14, 0.16, 0.98)
-        self.border:SetColorTexture(THEME.accent[1], THEME.accent[2], THEME.accent[3], 1)
+        self.bg:SetColorTexture(0.1, 0.1, 0.1, 0.98)
+        self.border:SetColorTexture(1, 1, 1, 1)
         ShowDropdown()
         GameTooltip:SetOwner(self, "ANCHOR_TOP")
-        GameTooltip:SetText("ClayToolBox", THEME.accent[1], THEME.accent[2], THEME.accent[3])
+        GameTooltip:SetText("正大光明", 1, 1, 1)
         GameTooltip:AddLine("Hover: Open menu", 0.8, 0.8, 0.8)
         GameTooltip:AddLine("Right-click: New macro", 0.8, 0.8, 0.8)
         GameTooltip:AddLine("Drag: Move button", 0.8, 0.8, 0.8)
         GameTooltip:Show()
     end)
     btn:SetScript("OnLeave", function(self)
-        self.bg:SetColorTexture(0.08, 0.08, 0.09, 0.95)
-        self.border:SetColorTexture(THEME.panelEdge[1], THEME.panelEdge[2], THEME.panelEdge[3], 1)
+        self.bg:SetColorTexture(0, 0, 0, 0.95)
+        self.border:SetColorTexture(1, 1, 1, 0.85)
         GameTooltip:Hide()
     end)
 
