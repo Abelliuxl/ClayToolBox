@@ -301,6 +301,8 @@ local menuButtons = {}
 local hideTimer = nil
 local dropdownAlive = false
 local ShowEditor
+local FindOrCreateGameMacro
+local UpdateGameMacro
 
 local function HideDropdown()
     if hideTimer then
@@ -493,7 +495,7 @@ end
 -- Game Macro Management
 -- ============================================================
 
-local function FindOrCreateGameMacro(dbIndex)
+FindOrCreateGameMacro = function(dbIndex)
     local macro = DB.macros[dbIndex]
     if not macro then return nil end
 
@@ -514,7 +516,7 @@ local function FindOrCreateGameMacro(dbIndex)
     return macroId
 end
 
-local function UpdateGameMacro(dbIndex)
+UpdateGameMacro = function(dbIndex)
     local macro = DB.macros[dbIndex]
     if not macro then return end
 
