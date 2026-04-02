@@ -531,6 +531,19 @@ local function UpdateGameMacro(dbIndex)
     end
 end
 
+local function DeleteGameMacroByName(targetName)
+    if not targetName or targetName == "" then return end
+
+    local numAccount, numChar = GetNumMacros()
+    local totalMacros = numAccount + numChar
+    for i = totalMacros, 1, -1 do
+        local name = GetMacroInfo(i)
+        if name and name == targetName then
+            DeleteMacro(i)
+        end
+    end
+end
+
 -- ============================================================
 -- Macro Editor
 -- ============================================================
@@ -770,19 +783,25 @@ ShowEditor = function(editIndex)
                 return
             end
 
+            local macroData = {
+                name = name,
+                body = body,
+                icon = icon,
+            }
+
             if editorFrame.editIndex then
-                ClayToolBoxDB.macros[editorFrame.editIndex] = {
-                    name = name,
-                    body = body,
-                    icon = icon,
-                }
-                UpdateGameMacro(editorFrame.editIndex)
+                DB.macros[editorFrame.editIndex] = macroData
+                local macroId = FindOrCreateGameMacro(editorFrame.editIndex)
+                if macroId then
+                    UpdateGameMacro(editorFrame.editIndex)
+                end
             else
-                table.insert(ClayToolBoxDB.macros, {
-                    name = name,
-                    body = body,
-                    icon = icon,
-                })
+                table.insert(DB.macros, macroData)
+                local newIndex = #DB.macros
+                local macroId = FindOrCreateGameMacro(newIndex)
+                if macroId then
+                    UpdateGameMacro(newIndex)
+                end
             end
 
             HideEditor()
@@ -798,12 +817,20 @@ ShowEditor = function(editIndex)
         deleteBtn:SetText("Delete")
         deleteBtn:SetScript("OnClick", function()
             if editorFrame.editIndex then
-                ClayToolBoxDB.macros[editorFrame.editIndex] = nil
-                local newMacros = {}
-                for _, m in ipairs(ClayToolBoxDB.macros) do
-                    if m then table.insert(newMacros, m) end
+                local oldCount = #DB.macros
+                table.remove(DB.macros, editorFrame.editIndex)
+
+                for i = editorFrame.editIndex, #DB.macros do
+                    local macroId = FindOrCreateGameMacro(i)
+                    if macroId then
+                        UpdateGameMacro(i)
+                    end
                 end
-                ClayToolBoxDB.macros = newMacros
+
+                if oldCount > #DB.macros then
+                    DeleteGameMacroByName("CTB_" .. oldCount)
+                end
+
                 HideEditor()
                 print("|cff00ff00ClayToolBox:|r Macro deleted!")
             else
