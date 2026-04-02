@@ -358,8 +358,8 @@ local function CreateMainButton()
     local FONT_SIZE = 14
     local FONT_FLAG = "OUTLINE"
 
-    local _, class = UnitClass("player")
-    local cc = (RAID_CLASS_COLORS and RAID_CLASS_COLORS[class]) or { r = 1, g = 1, b = 1 }
+    local classTag = select(2, UnitClass("player"))
+    local classColor = (C_ClassColor and C_ClassColor.GetClassColor and classTag and C_ClassColor.GetClassColor(classTag)) or (RAID_CLASS_COLORS and classTag and RAID_CLASS_COLORS[classTag]) or { r = 1, g = 1, b = 1 }
 
     local fsLabelFPS = btn:CreateFontString(nil, "OVERLAY")
     fsLabelFPS:SetFont(FONT_PATH, FONT_SIZE, FONT_FLAG)
@@ -370,7 +370,7 @@ local function CreateMainButton()
     local fsNumFPS = btn:CreateFontString(nil, "OVERLAY")
     fsNumFPS:SetFont(FONT_PATH, FONT_SIZE, FONT_FLAG)
     fsNumFPS:SetPoint("LEFT", fsLabelFPS, "RIGHT", 1, 0)
-    fsNumFPS:SetTextColor(cc.r, cc.g, cc.b, 1)
+    fsNumFPS:SetTextColor(classColor.r, classColor.g, classColor.b, 1)
     fsNumFPS:SetText("0")
 
     local fsLabelMS = btn:CreateFontString(nil, "OVERLAY")
@@ -382,7 +382,7 @@ local function CreateMainButton()
     local fsNumMS = btn:CreateFontString(nil, "OVERLAY")
     fsNumMS:SetFont(FONT_PATH, FONT_SIZE, FONT_FLAG)
     fsNumMS:SetPoint("LEFT", fsLabelMS, "RIGHT", 1, 0)
-    fsNumMS:SetTextColor(cc.r, cc.g, cc.b, 1)
+    fsNumMS:SetTextColor(classColor.r, classColor.g, classColor.b, 1)
     fsNumMS:SetText("0")
 
     local function RefreshStatsText()
@@ -497,7 +497,7 @@ local function ShowDropdown()
 
     local btn = ClayToolBoxButton
     dropdownFrame:ClearAllPoints()
-    dropdownFrame:SetPoint("TOP", btn, "BOTTOM", 0, 0)
+    dropdownFrame:SetPoint("BOTTOM", btn, "TOP", 0, 0)
 
     local child = dropdownFrame.scrollChild
     for _, b in ipairs(child.buttons or {}) do
