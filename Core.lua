@@ -448,7 +448,13 @@ local function ShowDropdown()
             else
                 local macroIndex = FindOrCreateGameMacro(i)
                 if macroIndex then
-                    MacroAutoExecute(macroIndex)
+                    if C_Macro and C_Macro.RunMacro then
+                        C_Macro.RunMacro(macroIndex)
+                    elseif RunMacro then
+                        RunMacro(macroIndex)
+                    else
+                        print("|cffff0000ClayToolBox:|r Unable to execute macro on this client.")
+                    end
                 end
             end
         end)
