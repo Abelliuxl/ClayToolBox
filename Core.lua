@@ -422,6 +422,7 @@ local function ShowDropdown()
         ApplyPanelBackdrop(dropdownFrame, 1)
         dropdownFrame:SetFrameStrata("DIALOG")
         dropdownFrame:EnableMouse(true)
+        dropdownFrame:SetClampedToScreen(true)
         dropdownFrame:Hide()
 
         dropdownFrame.scrollFrame = CreateFrame("ScrollFrame", nil, dropdownFrame)
@@ -439,10 +440,10 @@ local function ShowDropdown()
 
     local btn = ClayToolBoxButton
     dropdownFrame:ClearAllPoints()
-    dropdownFrame:SetPoint("TOPLEFT", btn, "TOPRIGHT", 0, 0)
+    dropdownFrame:SetPoint("LEFT", btn, "RIGHT", 8, 0)
     if dropdownFrame:GetRight() and dropdownFrame:GetRight() > UIParent:GetRight() then
         dropdownFrame:ClearAllPoints()
-        dropdownFrame:SetPoint("TOPRIGHT", btn, "TOPLEFT", 0, 0)
+        dropdownFrame:SetPoint("RIGHT", btn, "LEFT", -8, 0)
     end
 
     local child = dropdownFrame.scrollChild
