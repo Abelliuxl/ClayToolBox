@@ -3,12 +3,26 @@ local addonName, ns = ...
 local DB
 
 local function EnsureDB()
+    local defaultPos = { point = "CENTER", relativePoint = "CENTER", x = -200, y = 0 }
+
     if type(_G.ClayToolBoxDB) ~= "table" then
         _G.ClayToolBoxDB = {}
     end
 
     local store = _G.ClayToolBoxDB
-    store.buttonPos = store.buttonPos or { x = -200, y = 0 }
+    if type(store.buttonPos) ~= "table" then
+        store.buttonPos = {
+            point = defaultPos.point,
+            relativePoint = defaultPos.relativePoint,
+            x = defaultPos.x,
+            y = defaultPos.y,
+        }
+    else
+        store.buttonPos.point = store.buttonPos.point or defaultPos.point
+        store.buttonPos.relativePoint = store.buttonPos.relativePoint or defaultPos.relativePoint
+        store.buttonPos.x = tonumber(store.buttonPos.x) or defaultPos.x
+        store.buttonPos.y = tonumber(store.buttonPos.y) or defaultPos.y
+    end
     store.macros = store.macros or {}
 
     ClayToolBoxDB = store
@@ -321,20 +335,21 @@ local function CreateMainButton()
     btn:SetClampedToScreen(true)
     btn:SetBackdrop({
         bgFile = "Interface\\Buttons\\WHITE8x8",
-        edgeFile = "Interface\\Buttons\\WHITE8x8",
-        edgeSize = 1,
-        insets = { left = 1, right = 1, top = 1, bottom = 1 },
     })
     btn:SetBackdropColor(0, 0, 0, 0.95)
-    btn:SetBackdropBorderColor(1, 1, 1, 0.9)
 
     btn:SetScript("OnDragStart", function(self)
         self:StartMoving()
     end)
     btn:SetScript("OnDragStop", function(self)
         self:StopMovingOrSizing()
-        local p, _, r, x, y = self:GetPoint()
-        DB.buttonPos = { x = x, y = y }
+        local point, _, relativePoint, x, y = self:GetPoint(1)
+        DB.buttonPos = {
+            point = point or "CENTER",
+            relativePoint = relativePoint or "CENTER",
+            x = tonumber(x) or -200,
+            y = tonumber(y) or 0,
+        }
     end)
 
     local text = btn:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
@@ -344,7 +359,7 @@ local function CreateMainButton()
     btn.text = text
     btn:SetWidth(math.max(78, math.floor(text:GetStringWidth() + 20)))
 
-    btn:SetPoint("CENTER", DB.buttonPos.x, DB.buttonPos.y)
+    btn:SetPoint(DB.buttonPos.point or "CENTER", UIParent, DB.buttonPos.relativePoint or "CENTER", DB.buttonPos.x or -200, DB.buttonPos.y or 0)
 
     return btn
 end
@@ -897,7 +912,6 @@ local function OnLoad()
 
     btn:SetScript("OnEnter", function(self)
         self:SetBackdropColor(0.08, 0.08, 0.08, 0.98)
-        self:SetBackdropBorderColor(1, 1, 1, 1)
         ShowDropdown()
         GameTooltip:SetOwner(self, "ANCHOR_TOP")
         GameTooltip:SetText("正大光明", 1, 1, 1)
@@ -908,7 +922,6 @@ local function OnLoad()
     end)
     btn:SetScript("OnLeave", function(self)
         self:SetBackdropColor(0, 0, 0, 0.95)
-        self:SetBackdropBorderColor(1, 1, 1, 0.9)
         GameTooltip:Hide()
     end)
 
