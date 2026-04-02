@@ -428,8 +428,15 @@ local function ShowDropdown()
         mBtn:SetPoint("TOPLEFT", 5, yOffset)
         mBtn:SetHighlightTexture("Interface\\Buttons\\UI-Listbox-Highlight2", "ADD")
         mBtn:SetAttribute("type1", "macro")
-        mBtn:SetAttribute("macrotext1", macro.body or "")
         mBtn:SetAttribute("type2", nil)
+
+        local macroIndex = FindOrCreateGameMacro(i)
+        if macroIndex then
+            UpdateGameMacro(i)
+            mBtn:SetAttribute("macro1", macroIndex)
+        else
+            mBtn:SetAttribute("type1", nil)
+        end
 
         local icon = mBtn:CreateTexture(nil, "ARTWORK")
         icon:SetSize(24, 24)
