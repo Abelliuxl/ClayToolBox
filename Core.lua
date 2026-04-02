@@ -423,10 +423,13 @@ local function ShowDropdown()
 
     -- Macro buttons
     for i, macro in ipairs(DB.macros) do
-        local mBtn = CreateFrame("Button", nil, child)
+        local mBtn = CreateFrame("Button", nil, child, "SecureActionButtonTemplate")
         mBtn:SetSize(170, 30)
         mBtn:SetPoint("TOPLEFT", 5, yOffset)
         mBtn:SetHighlightTexture("Interface\\Buttons\\UI-Listbox-Highlight2", "ADD")
+        mBtn:SetAttribute("type1", "macro")
+        mBtn:SetAttribute("macrotext1", macro.body or "")
+        mBtn:SetAttribute("type2", nil)
 
         local icon = mBtn:CreateTexture(nil, "ARTWORK")
         icon:SetSize(24, 24)
@@ -445,17 +448,6 @@ local function ShowDropdown()
             if button == "RightButton" then
                 HideDropdown()
                 ShowEditor(i)
-            else
-                local macroIndex = FindOrCreateGameMacro(i)
-                if macroIndex then
-                    if C_Macro and C_Macro.RunMacro then
-                        C_Macro.RunMacro(macroIndex)
-                    elseif RunMacro then
-                        RunMacro(macroIndex)
-                    else
-                        print("|cffff0000ClayToolBox:|r Unable to execute macro on this client.")
-                    end
-                end
             end
         end)
         mBtn:RegisterForClicks("LeftButtonUp", "RightButtonUp")
