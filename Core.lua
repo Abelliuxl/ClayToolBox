@@ -313,12 +313,20 @@ end
 -- ============================================================
 
 local function CreateMainButton()
-    local btn = CreateFrame("Button", "ClayToolBoxButton", UIParent)
-    btn:SetSize(128, 34)
+    local btn = CreateFrame("Button", "ClayToolBoxButton", UIParent, "BackdropTemplate")
+    btn:SetSize(96, 24)
     btn:SetMovable(true)
     btn:EnableMouse(true)
     btn:RegisterForDrag("LeftButton")
     btn:SetClampedToScreen(true)
+    btn:SetBackdrop({
+        bgFile = "Interface\\Buttons\\WHITE8x8",
+        edgeFile = "Interface\\Buttons\\WHITE8x8",
+        edgeSize = 1,
+        insets = { left = 1, right = 1, top = 1, bottom = 1 },
+    })
+    btn:SetBackdropColor(0, 0, 0, 0.95)
+    btn:SetBackdropBorderColor(1, 1, 1, 0.9)
 
     btn:SetScript("OnDragStart", function(self)
         self:StartMoving()
@@ -329,21 +337,12 @@ local function CreateMainButton()
         DB.buttonPos = { x = x, y = y }
     end)
 
-    local bg = btn:CreateTexture(nil, "BACKGROUND")
-    bg:SetAllPoints()
-    bg:SetColorTexture(0, 0, 0, 0.95)
-    btn.bg = bg
-
-    local border = btn:CreateTexture(nil, "BORDER")
-    border:SetAllPoints()
-    border:SetColorTexture(1, 1, 1, 0.85)
-    btn.border = border
-
     local text = btn:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
     text:SetText("正大光明")
     text:SetTextColor(1, 1, 1)
     text:SetPoint("CENTER")
     btn.text = text
+    btn:SetWidth(math.max(78, math.floor(text:GetStringWidth() + 20)))
 
     btn:SetPoint("CENTER", DB.buttonPos.x, DB.buttonPos.y)
 
@@ -897,8 +896,8 @@ local function OnLoad()
     local btn = CreateMainButton()
 
     btn:SetScript("OnEnter", function(self)
-        self.bg:SetColorTexture(0.1, 0.1, 0.1, 0.98)
-        self.border:SetColorTexture(1, 1, 1, 1)
+        self:SetBackdropColor(0.08, 0.08, 0.08, 0.98)
+        self:SetBackdropBorderColor(1, 1, 1, 1)
         ShowDropdown()
         GameTooltip:SetOwner(self, "ANCHOR_TOP")
         GameTooltip:SetText("正大光明", 1, 1, 1)
@@ -908,8 +907,8 @@ local function OnLoad()
         GameTooltip:Show()
     end)
     btn:SetScript("OnLeave", function(self)
-        self.bg:SetColorTexture(0, 0, 0, 0.95)
-        self.border:SetColorTexture(1, 1, 1, 0.85)
+        self:SetBackdropColor(0, 0, 0, 0.95)
+        self:SetBackdropBorderColor(1, 1, 1, 0.9)
         GameTooltip:Hide()
     end)
 
