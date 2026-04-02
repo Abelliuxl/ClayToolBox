@@ -1,10 +1,19 @@
 local addonName, ns = ...
 
-ClayToolBoxDB = ClayToolBoxDB or { buttonPos = { x = -200, y = 0 }, macros = {} }
-ClayToolBoxDB.buttonPos = ClayToolBoxDB.buttonPos or { x = -200, y = 0 }
-ClayToolBoxDB.macros = ClayToolBoxDB.macros or {}
-_G.ClayToolBoxDB = ClayToolBoxDB
-local DB = ClayToolBoxDB
+local DB
+
+local function EnsureDB()
+    if type(_G.ClayToolBoxDB) ~= "table" then
+        _G.ClayToolBoxDB = {}
+    end
+
+    local store = _G.ClayToolBoxDB
+    store.buttonPos = store.buttonPos or { x = -200, y = 0 }
+    store.macros = store.macros or {}
+
+    ClayToolBoxDB = store
+    DB = store
+end
 
 -- Common macro icon textures
 local MACRO_ICONS = {
@@ -896,6 +905,7 @@ end
 -- ============================================================
 
 local function OnLoad()
+    EnsureDB()
     local btn = CreateMainButton()
 
     btn:SetScript("OnEnter", function(self)
@@ -929,6 +939,7 @@ local initFrame = CreateFrame("Frame")
 initFrame:RegisterEvent("PLAYER_LOGIN")
 initFrame:SetScript("OnEvent", function(self, event, ...)
     if event == "PLAYER_LOGIN" then
+        EnsureDB()
         OnLoad()
         self:UnregisterAllEvents()
     end
