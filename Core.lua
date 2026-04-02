@@ -451,7 +451,7 @@ local function ShowDropdown()
         label:SetJustifyH("LEFT")
         mBtn.label = label
 
-        mBtn:SetScript("OnClick", function(self, button)
+        mBtn:SetScript("PostClick", function(self, button)
             if button == "RightButton" then
                 HideDropdown()
                 ShowEditor(i)
