@@ -260,13 +260,61 @@ local function FindIconIndex(texture)
     return 1
 end
 
+local THEME = {
+    accent = { 1.0, 0.82, 0.0 },
+    panelBg = { 0.05, 0.05, 0.06, 0.95 },
+    panelEdge = { 0.45, 0.35, 0.15, 0.95 },
+    rowIdle = { 0.12, 0.12, 0.13, 0.85 },
+    rowHover = { 0.22, 0.18, 0.08, 0.95 },
+}
+
+local function ApplyPanelBackdrop(frame, edgeSize)
+    frame:SetBackdrop({
+        bgFile = "Interface\\Buttons\\WHITE8x8",
+        edgeFile = "Interface\\Buttons\\WHITE8x8",
+        edgeSize = edgeSize or 1,
+        insets = { left = 1, right = 1, top = 1, bottom = 1 },
+    })
+    frame:SetBackdropColor(THEME.panelBg[1], THEME.panelBg[2], THEME.panelBg[3], THEME.panelBg[4])
+    frame:SetBackdropBorderColor(THEME.panelEdge[1], THEME.panelEdge[2], THEME.panelEdge[3], THEME.panelEdge[4])
+end
+
+local function StyleRowButton(btn, textObject)
+    local bg = btn:CreateTexture(nil, "BACKGROUND")
+    bg:SetAllPoints()
+    bg:SetColorTexture(THEME.rowIdle[1], THEME.rowIdle[2], THEME.rowIdle[3], THEME.rowIdle[4])
+    btn.rowBg = bg
+
+    if textObject then
+        textObject:SetTextColor(1, 1, 1)
+    end
+
+    btn:SetScript("OnEnter", function(self)
+        if self.rowBg then
+            self.rowBg:SetColorTexture(THEME.rowHover[1], THEME.rowHover[2], THEME.rowHover[3], THEME.rowHover[4])
+        end
+        if textObject then
+            textObject:SetTextColor(THEME.accent[1], THEME.accent[2], THEME.accent[3])
+        end
+    end)
+
+    btn:SetScript("OnLeave", function(self)
+        if self.rowBg then
+            self.rowBg:SetColorTexture(THEME.rowIdle[1], THEME.rowIdle[2], THEME.rowIdle[3], THEME.rowIdle[4])
+        end
+        if textObject then
+            textObject:SetTextColor(1, 1, 1)
+        end
+    end)
+end
+
 -- ============================================================
 -- Main Button
 -- ============================================================
 
 local function CreateMainButton()
     local btn = CreateFrame("Button", "ClayToolBoxButton", UIParent)
-    btn:SetSize(60, 60)
+    btn:SetSize(62, 62)
     btn:SetMovable(true)
     btn:EnableMouse(true)
     btn:RegisterForDrag("LeftButton")
@@ -282,18 +330,25 @@ local function CreateMainButton()
     end)
 
     local bg = btn:CreateTexture(nil, "BACKGROUND")
-    bg:SetAllPoints()
-    bg:SetColorTexture(0.15, 0.15, 0.15, 0.9)
+    bg:SetPoint("TOPLEFT", 2, -2)
+    bg:SetPoint("BOTTOMRIGHT", -2, 2)
+    bg:SetColorTexture(0.08, 0.08, 0.09, 0.95)
     btn.bg = bg
 
     local border = btn:CreateTexture(nil, "BORDER")
     border:SetAllPoints()
-    border:SetColorTexture(0.6, 0.4, 0.1, 1)
+    border:SetColorTexture(THEME.panelEdge[1], THEME.panelEdge[2], THEME.panelEdge[3], 1)
     btn.border = border
 
-    local text = btn:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
+    local icon = btn:CreateTexture(nil, "ARTWORK")
+    icon:SetSize(28, 28)
+    icon:SetPoint("CENTER", 0, 8)
+    icon:SetTexture("Interface\\Icons\\INV_Misc_Gear_01")
+    btn.icon = icon
+
+    local text = btn:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
     text:SetText("Clay")
-    text:SetPoint("CENTER")
+    text:SetPoint("BOTTOM", 0, 7)
     btn.text = text
 
     btn:SetPoint("CENTER", DB.buttonPos.x, DB.buttonPos.y)
@@ -365,33 +420,32 @@ local function ShowDropdown()
 
     if not dropdownFrame then
         dropdownFrame = CreateFrame("Frame", "ClayToolBoxDropdown", UIParent, "BackdropTemplate")
-        dropdownFrame:SetSize(200, 40)
-        dropdownFrame:SetBackdrop({
-            bgFile = "Interface\\DialogFrame\\UI-DialogBox-Background",
-            edgeFile = "Interface\\DialogFrame\\UI-DialogBox-Border",
-            edgeSize = 16,
-            insets = { left = 4, right = 4, top = 4, bottom = 4 },
-        })
-        dropdownFrame:SetBackdropColor(0, 0, 0, 0.85)
+        dropdownFrame:SetSize(240, 40)
+        ApplyPanelBackdrop(dropdownFrame, 1)
         dropdownFrame:SetFrameStrata("DIALOG")
         dropdownFrame:EnableMouse(true)
         dropdownFrame:Hide()
 
         dropdownFrame.scrollFrame = CreateFrame("ScrollFrame", nil, dropdownFrame)
-        dropdownFrame.scrollFrame:SetPoint("TOPLEFT", 8, -8)
-        dropdownFrame.scrollFrame:SetPoint("BOTTOMRIGHT", -28, 8)
+        dropdownFrame.scrollFrame:SetPoint("TOPLEFT", 6, -6)
+        dropdownFrame.scrollFrame:SetPoint("BOTTOMRIGHT", -24, 6)
 
         local scrollBg = dropdownFrame.scrollFrame:CreateTexture(nil, "BACKGROUND")
         scrollBg:SetAllPoints()
-        scrollBg:SetColorTexture(0, 0, 0, 0.8)
+        scrollBg:SetColorTexture(0.03, 0.03, 0.03, 0.75)
 
         dropdownFrame.scrollChild = CreateFrame("Frame", nil, dropdownFrame.scrollFrame)
-        dropdownFrame.scrollChild:SetSize(180, 10)
+        dropdownFrame.scrollChild:SetSize(204, 10)
         dropdownFrame.scrollFrame:SetScrollChild(dropdownFrame.scrollChild)
     end
 
     local btn = ClayToolBoxButton
+    dropdownFrame:ClearAllPoints()
     dropdownFrame:SetPoint("TOPLEFT", btn, "TOPRIGHT", 0, 0)
+    if dropdownFrame:GetRight() and dropdownFrame:GetRight() > UIParent:GetRight() then
+        dropdownFrame:ClearAllPoints()
+        dropdownFrame:SetPoint("TOPRIGHT", btn, "TOPLEFT", 0, 0)
+    end
 
     local child = dropdownFrame.scrollChild
     for _, b in ipairs(child.buttons or {}) do
@@ -404,38 +458,34 @@ local function ShowDropdown()
     dropdownFrame:Show()
     C_Timer.After(0.5, CheckMousePosition)
 
-    local yOffset = -5
+    local yOffset = -4
+    local rowHeight = 32
+    local rowWidth = 204
 
     -- New Macro button
     local newBtn = CreateFrame("Button", nil, child)
-    newBtn:SetSize(170, 30)
-    newBtn:SetPoint("TOPLEFT", 5, yOffset)
+    newBtn:SetSize(rowWidth, rowHeight)
+    newBtn:SetPoint("TOPLEFT", 2, yOffset)
     newBtn:SetNormalFontObject("GameFontNormal")
-    newBtn:SetHighlightTexture("Interface\\Buttons\\UI-Listbox-Highlight2", "ADD")
     newBtn:SetText("+ New Macro")
-    newBtn:GetFontString():SetPoint("LEFT", 10, 0)
+    newBtn:GetFontString():SetPoint("LEFT", 12, 0)
     newBtn:GetFontString():SetPoint("RIGHT", -10, 0)
+    newBtn:GetFontString():SetJustifyH("LEFT")
     newBtn:SetScript("OnClick", function()
         HideDropdown()
         ShowEditor()
     end)
-    newBtn:SetScript("OnEnter", function(self)
-        self:GetFontString():SetTextColor(1, 0.82, 0)
-    end)
-    newBtn:SetScript("OnLeave", function(self)
-        self:GetFontString():SetTextColor(1, 0.82, 0)
-    end)
-    newBtn:GetFontString():SetTextColor(1, 0.82, 0)
+    StyleRowButton(newBtn, newBtn:GetFontString())
+    newBtn:GetFontString():SetTextColor(THEME.accent[1], THEME.accent[2], THEME.accent[3])
     table.insert(child.buttons, newBtn)
 
-    yOffset = yOffset - 35
+    yOffset = yOffset - (rowHeight + 4)
 
     -- Macro buttons
     for i, macro in ipairs(DB.macros) do
         local mBtn = CreateFrame("Button", nil, child, "SecureActionButtonTemplate")
-        mBtn:SetSize(170, 30)
-        mBtn:SetPoint("TOPLEFT", 5, yOffset)
-        mBtn:SetHighlightTexture("Interface\\Buttons\\UI-Listbox-Highlight2", "ADD")
+        mBtn:SetSize(rowWidth, rowHeight)
+        mBtn:SetPoint("TOPLEFT", 2, yOffset)
         mBtn:SetAttribute("type1", "macro")
         mBtn:SetAttribute("type2", nil)
 
@@ -450,15 +500,20 @@ local function ShowDropdown()
             mBtn:SetAttribute("macrotext1", nil)
         end
 
+        local rowBg = mBtn:CreateTexture(nil, "BACKGROUND")
+        rowBg:SetAllPoints()
+        rowBg:SetColorTexture(THEME.rowIdle[1], THEME.rowIdle[2], THEME.rowIdle[3], THEME.rowIdle[4])
+        mBtn.rowBg = rowBg
+
         local icon = mBtn:CreateTexture(nil, "ARTWORK")
-        icon:SetSize(24, 24)
-        icon:SetPoint("LEFT", 4, 0)
+        icon:SetSize(22, 22)
+        icon:SetPoint("LEFT", 8, 0)
         icon:SetTexture(GetMacroTexture(macro.icon))
         mBtn.icon = icon
 
         local label = mBtn:CreateFontString(nil, "OVERLAY", "GameFontNormal")
         label:SetText(macro.name)
-        label:SetPoint("LEFT", 34, 0)
+        label:SetPoint("LEFT", 38, 0)
         label:SetPoint("RIGHT", -10, 0)
         label:SetJustifyH("LEFT")
         mBtn.label = label
@@ -472,6 +527,9 @@ local function ShowDropdown()
         mBtn:RegisterForClicks("LeftButtonDown", "LeftButtonUp", "RightButtonDown", "RightButtonUp")
 
         mBtn:SetScript("OnEnter", function(self)
+            if self.rowBg then
+                self.rowBg:SetColorTexture(THEME.rowHover[1], THEME.rowHover[2], THEME.rowHover[3], THEME.rowHover[4])
+            end
             self.label:SetTextColor(1, 0.82, 0)
             GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
             GameTooltip:SetText(macro.name, 1, 0.82, 0)
@@ -491,17 +549,20 @@ local function ShowDropdown()
             GameTooltip:Show()
         end)
         mBtn:SetScript("OnLeave", function(self)
+            if self.rowBg then
+                self.rowBg:SetColorTexture(THEME.rowIdle[1], THEME.rowIdle[2], THEME.rowIdle[3], THEME.rowIdle[4])
+            end
             self.label:SetTextColor(1, 1, 1)
             GameTooltip:Hide()
         end)
 
         table.insert(child.buttons, mBtn)
-        yOffset = yOffset - 35
+        yOffset = yOffset - (rowHeight + 4)
     end
 
-    local totalHeight = math.max(40, #DB.macros * 35 + 70)
+    local totalHeight = math.max(44, #DB.macros * (rowHeight + 4) + 52)
     dropdownFrame:SetHeight(math.min(totalHeight, 400))
-    child:SetHeight(totalHeight - 16)
+    child:SetHeight(totalHeight - 12)
 
     dropdownAlive = true
     dropdownFrame:Show()
@@ -581,14 +642,8 @@ ShowEditor = function(editIndex)
 
     if not editorFrame then
         editorFrame = CreateFrame("Frame", "ClayToolBoxEditor", UIParent, "BackdropTemplate")
-        editorFrame:SetSize(380, 420)
-        editorFrame:SetBackdrop({
-            bgFile = "Interface\\DialogFrame\\UI-DialogBox-Background",
-            edgeFile = "Interface\\DialogFrame\\UI-DialogBox-Border",
-            edgeSize = 16,
-            insets = { left = 4, right = 4, top = 4, bottom = 4 },
-        })
-        editorFrame:SetBackdropColor(0, 0, 0, 0.9)
+        editorFrame:SetSize(470, 500)
+        ApplyPanelBackdrop(editorFrame, 1)
         editorFrame:SetFrameStrata("DIALOG")
         editorFrame:SetMovable(true)
         editorFrame:EnableMouse(true)
@@ -606,18 +661,18 @@ ShowEditor = function(editIndex)
         -- Title
         local title = editorFrame:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
         title:SetText("Macro Editor")
-        title:SetPoint("TOP", 0, -15)
+        title:SetPoint("TOP", 0, -16)
         editorFrame.title = title
 
         -- Name label and edit box
         local nameLabel = editorFrame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
         nameLabel:SetText("Name:")
-        nameLabel:SetPoint("TOPLEFT", 15, -45)
+        nameLabel:SetPoint("TOPLEFT", 18, -56)
         editorFrame.nameLabel = nameLabel
 
         local nameEdit = CreateFrame("EditBox", nil, editorFrame, "InputBoxTemplate")
-        nameEdit:SetSize(250, 30)
-        nameEdit:SetPoint("LEFT", nameLabel, "RIGHT", 5, 0)
+        nameEdit:SetSize(340, 28)
+        nameEdit:SetPoint("TOPLEFT", 102, -48)
         nameEdit:SetAutoFocus(false)
         nameEdit:SetMaxLetters(16)
 
@@ -630,13 +685,13 @@ ShowEditor = function(editIndex)
         -- Icon label
         local iconLabel = editorFrame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
         iconLabel:SetText("Icon:")
-        iconLabel:SetPoint("TOPLEFT", 15, -85)
+        iconLabel:SetPoint("TOPLEFT", 18, -98)
         editorFrame.iconLabel = iconLabel
 
         -- Icon display
         local iconDisplay = CreateFrame("Button", nil, editorFrame)
-        iconDisplay:SetSize(36, 36)
-        iconDisplay:SetPoint("LEFT", iconLabel, "RIGHT", 10, 0)
+        iconDisplay:SetSize(34, 34)
+        iconDisplay:SetPoint("TOPLEFT", 102, -90)
 
         local iconBg = iconDisplay:CreateTexture(nil, "BACKGROUND")
         iconBg:SetAllPoints()
@@ -659,13 +714,7 @@ ShowEditor = function(editIndex)
             if not editorFrame.iconPicker then
                 editorFrame.iconPicker = CreateFrame("Frame", nil, editorFrame, "BackdropTemplate")
                 editorFrame.iconPicker:SetSize(320, 280)
-                editorFrame.iconPicker:SetBackdrop({
-                    bgFile = "Interface\\DialogFrame\\UI-DialogBox-Background",
-                    edgeFile = "Interface\\DialogFrame\\UI-DialogBox-Border",
-                    edgeSize = 16,
-                    insets = { left = 4, right = 4, top = 4, bottom = 4 },
-                })
-                editorFrame.iconPicker:SetBackdropColor(0, 0, 0, 0.95)
+                ApplyPanelBackdrop(editorFrame.iconPicker, 1)
                 editorFrame.iconPicker:SetFrameStrata("TOOLTIP")
                 editorFrame.iconPicker:Hide()
 
@@ -744,8 +793,14 @@ ShowEditor = function(editIndex)
 
             child:SetHeight(math.ceil(#MACRO_ICONS / cols) * (btnSize + spacing) + 10)
 
-            picker:SetPoint("TOPLEFT", editorFrame, "TOPRIGHT", 5, 0)
+            picker:ClearAllPoints()
+            picker:SetPoint("TOPLEFT", editorFrame, "TOPRIGHT", 8, 0)
             picker:Show()
+
+            if picker:GetRight() and picker:GetRight() > UIParent:GetRight() then
+                picker:ClearAllPoints()
+                picker:SetPoint("TOPRIGHT", editorFrame, "TOPLEFT", -8, 0)
+            end
         end)
 
         iconDisplay:SetScript("OnEnter", function(self)
@@ -758,13 +813,13 @@ ShowEditor = function(editIndex)
         -- Body label
         local bodyLabel = editorFrame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
         bodyLabel:SetText("Content:")
-        bodyLabel:SetPoint("TOPLEFT", 15, -130)
+        bodyLabel:SetPoint("TOPLEFT", 18, -146)
         editorFrame.bodyLabel = bodyLabel
 
         -- Body edit box (multi-line via scroll)
         local bodyScroll = CreateFrame("ScrollFrame", nil, editorFrame, "UIPanelScrollFrameTemplate")
-        bodyScroll:SetSize(340, 180)
-        bodyScroll:SetPoint("TOPLEFT", 15, -155)
+        bodyScroll:SetSize(430, 250)
+        bodyScroll:SetPoint("TOPLEFT", 18, -168)
         editorFrame.bodyScroll = bodyScroll
 
         local bodyBg = bodyScroll:CreateTexture(nil, "BACKGROUND")
@@ -776,7 +831,7 @@ ShowEditor = function(editIndex)
         bodyBorder:SetColorTexture(0.4, 0.3, 0.2, 1)
 
         local bodyEdit = CreateFrame("EditBox", nil, bodyScroll)
-        bodyEdit:SetSize(320, 180)
+        bodyEdit:SetSize(400, 250)
         bodyEdit:SetMultiLine(true)
         bodyEdit:SetAutoFocus(false)
         bodyEdit:SetFontObject("ChatFontNormal")
@@ -788,8 +843,8 @@ ShowEditor = function(editIndex)
 
         -- Save button
         local saveBtn = CreateFrame("Button", nil, editorFrame, "UIPanelButtonTemplate")
-        saveBtn:SetSize(100, 30)
-        saveBtn:SetPoint("BOTTOMLEFT", 20, 15)
+        saveBtn:SetSize(130, 30)
+        saveBtn:SetPoint("BOTTOMLEFT", 26, 18)
         saveBtn:SetText("Save")
         saveBtn:SetScript("OnClick", function()
             local name = editorFrame.nameEdit:GetText()
@@ -831,7 +886,7 @@ ShowEditor = function(editIndex)
 
         -- Delete button
         local deleteBtn = CreateFrame("Button", nil, editorFrame, "UIPanelButtonTemplate")
-        deleteBtn:SetSize(100, 30)
+        deleteBtn:SetSize(130, 30)
         deleteBtn:SetPoint("LEFT", saveBtn, "RIGHT", 10, 0)
         deleteBtn:SetText("Delete")
         deleteBtn:SetScript("OnClick", function()
@@ -860,7 +915,7 @@ ShowEditor = function(editIndex)
 
         -- Cancel button
         local cancelBtn = CreateFrame("Button", nil, editorFrame, "UIPanelButtonTemplate")
-        cancelBtn:SetSize(100, 30)
+        cancelBtn:SetSize(130, 30)
         cancelBtn:SetPoint("LEFT", deleteBtn, "RIGHT", 10, 0)
         cancelBtn:SetText("Cancel")
         cancelBtn:SetScript("OnClick", function()
@@ -909,19 +964,19 @@ local function OnLoad()
     local btn = CreateMainButton()
 
     btn:SetScript("OnEnter", function(self)
-        self.bg:SetColorTexture(0.25, 0.25, 0.25, 0.9)
-        self.border:SetColorTexture(1, 0.82, 0, 1)
+        self.bg:SetColorTexture(0.14, 0.14, 0.16, 0.98)
+        self.border:SetColorTexture(THEME.accent[1], THEME.accent[2], THEME.accent[3], 1)
         ShowDropdown()
         GameTooltip:SetOwner(self, "ANCHOR_TOP")
-        GameTooltip:SetText("ClayToolBox", 1, 0.82, 0)
+        GameTooltip:SetText("ClayToolBox", THEME.accent[1], THEME.accent[2], THEME.accent[3])
         GameTooltip:AddLine("Hover: Open menu", 0.8, 0.8, 0.8)
         GameTooltip:AddLine("Right-click: New macro", 0.8, 0.8, 0.8)
         GameTooltip:AddLine("Drag: Move button", 0.8, 0.8, 0.8)
         GameTooltip:Show()
     end)
     btn:SetScript("OnLeave", function(self)
-        self.bg:SetColorTexture(0.15, 0.15, 0.15, 0.9)
-        self.border:SetColorTexture(0.6, 0.4, 0.1, 1)
+        self.bg:SetColorTexture(0.08, 0.08, 0.09, 0.95)
+        self.border:SetColorTexture(THEME.panelEdge[1], THEME.panelEdge[2], THEME.panelEdge[3], 1)
         GameTooltip:Hide()
     end)
 
