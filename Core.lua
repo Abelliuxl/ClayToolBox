@@ -496,8 +496,6 @@ local function ShowDropdown()
     end
 
     local btn = ClayToolBoxButton
-    dropdownFrame:ClearAllPoints()
-    dropdownFrame:SetPoint("BOTTOM", btn, "TOP", 0, 0)
 
     local child = dropdownFrame.scrollChild
     for _, b in ipairs(child.buttons or {}) do
@@ -603,8 +601,38 @@ local function ShowDropdown()
     end
 
     local totalHeight = math.max(44, #DB.macros * (rowHeight + 4) + 52)
-    dropdownFrame:SetHeight(math.min(totalHeight, 400))
+    local uiTop = UIParent:GetTop() or 0
+    local uiBottom = UIParent:GetBottom() or 0
+    local btnTop = btn:GetTop() or 0
+    local btnBottom = btn:GetBottom() or 0
+    local gap = 2
+    local availableUp = math.max(0, uiTop - btnTop - gap)
+    local availableDown = math.max(0, btnBottom - uiBottom - gap)
+
+    local openUp
+    if availableUp >= totalHeight then
+        openUp = true
+    elseif availableDown >= totalHeight then
+        openUp = false
+    else
+        openUp = availableUp >= availableDown
+    end
+
+    local availableHeight = openUp and availableUp or availableDown
+    local finalHeight = math.min(totalHeight, 400, math.max(44, availableHeight))
+    if availableHeight > 0 and finalHeight > availableHeight then
+        finalHeight = availableHeight
+    end
+
+    dropdownFrame:SetHeight(finalHeight)
     child:SetHeight(totalHeight - 12)
+
+    dropdownFrame:ClearAllPoints()
+    if openUp then
+        dropdownFrame:SetPoint("BOTTOM", btn, "TOP", 0, gap)
+    else
+        dropdownFrame:SetPoint("TOP", btn, "BOTTOM", 0, -gap)
+    end
 
     dropdownAlive = true
     dropdownFrame:Show()
